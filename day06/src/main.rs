@@ -1,0 +1,38 @@
+use clap::Parser;
+use itertools::Itertools;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(long)]
+    data_file: String,
+}
+
+fn main() {
+    let args = Args::parse();
+
+    let file = File::open(&args.data_file).expect("Failed to open file");
+    let reader = BufReader::new(file);
+    let lines: Vec<String> = reader
+        .lines()
+        .map(|line| line.expect("Failed to read line"))
+        .collect();
+
+    let mut part1 = "".to_string();
+    for i in 0..lines[0].len() {
+        part1 += &lines
+            .iter()
+            .counts_by(|line| line.chars().nth(i).unwrap())
+            .iter()
+            .max_by_key(|(_, c)| *c)
+            .unwrap()
+            .0
+            .to_string();
+    }
+
+    println!("Part 1: {}", part1);
+}
