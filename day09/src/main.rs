@@ -24,6 +24,14 @@ fn main() {
 
     let compressed: Vec<char> = lines.first().unwrap().chars().collect();
 
+    let part1_length = get_decompressed_size(&compressed, false);
+    println!("Part 1: {}", part1_length);
+
+    let part2_length = get_decompressed_size(&compressed, true);
+    println!("Part 2: {}", part2_length);
+}
+
+fn get_decompressed_size(compressed: &Vec<char>, use_version_2: bool) -> usize {
     let mut length = 0;
     let mut index = 0;
     while index < compressed.len() {
@@ -43,9 +51,18 @@ fn main() {
         let count: usize = count.parse().unwrap();
         let size: usize = size.parse().unwrap();
 
+        if use_version_2 {
+            length += count
+                * get_decompressed_size(
+                    &compressed[(index + encoding.len() + 2)..(index + encoding.len() + 2 + size)]
+                        .to_vec(),
+                    use_version_2,
+                );
+        } else {
+            length += count * size;
+        }
         index += encoding.len() + 2 /* for end paren */ + size;
-        length += count * size;
     }
 
-    println!("Part 1: {}", length);
+    length
 }
