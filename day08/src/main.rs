@@ -1,5 +1,4 @@
 use clap::Parser;
-use itertools::Itertools;
 use std::{
     fs::File,
     io::{BufRead, BufReader},
@@ -63,4 +62,15 @@ fn main() {
         .map(|col| col.iter().filter(|v| **v).count())
         .sum();
     println!("Part 1: {}", pixels_lit);
+
+    for y in 0..6 {
+        for x in 0..50 {
+            if board[x][y] {
+                print!("#");
+            } else {
+                print!(" ");
+            }
+        }
+        print!("\n");
+    }
 }
