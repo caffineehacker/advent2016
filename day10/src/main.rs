@@ -65,6 +65,8 @@ fn main() {
             }
         });
 
+    let mut part2: u64 = 1;
+    let mut part2_count = 0;
     'processing: loop {
         let mut i = 0;
         while i < bots.len() {
@@ -78,7 +80,9 @@ fn main() {
 
                 if low == 17 && high == 61 {
                     println!("Part 1: {}", bot.number);
-                    break 'processing;
+                    if part2_count == 3 {
+                        break 'processing;
+                    }
                 }
 
                 match bot.low_value_dest {
@@ -92,8 +96,15 @@ fn main() {
                             panic!("Too many values");
                         }
                     }
-                    Destination::Output(_) => {
-                        // For now this is a no-op since part 1 doesn't care
+                    Destination::Output(bin) => {
+                        if bin < 3 {
+                            part2 *= low as u64;
+                            part2_count += 1;
+
+                            if part2_count == 3 {
+                                break 'processing;
+                            }
+                        }
                     }
                 }
 
@@ -108,8 +119,15 @@ fn main() {
                             panic!("Too many values");
                         }
                     }
-                    Destination::Output(_) => {
-                        // For now this is a no-op since part 1 doesn't care
+                    Destination::Output(bin) => {
+                        if bin < 3 {
+                            part2 *= high as u64;
+                            part2_count += 1;
+
+                            if part2_count == 3 {
+                                break 'processing;
+                            }
+                        }
                     }
                 }
 
@@ -119,6 +137,8 @@ fn main() {
             i += 1;
         }
     }
+
+    println!("Part 2: {}", part2);
 }
 
 fn to_bot(line: &String) -> Bot {
