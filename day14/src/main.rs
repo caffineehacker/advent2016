@@ -11,6 +11,8 @@ struct Args {
     salt: String,
     #[arg(long)]
     debug: bool,
+    #[arg(long)]
+    part2: bool,
 }
 
 fn main() {
@@ -24,8 +26,16 @@ fn main() {
     'hashing: loop {
         progress.tick();
         progress.set_message(format!("{}", i));
-        let digest = md5::compute(format!("{}{}", args.salt, i.to_string()));
-        let hashed = format!("{:x}", digest);
+        let mut digest = md5::compute(format!("{}{}", args.salt, i.to_string()));
+        let mut hashed = format!("{:x}", digest);
+
+        if args.part2 {
+            for _ in 0..2016 {
+                digest = md5::compute(hashed);
+                hashed = format!("{:x}", digest);
+            }
+        }
+
         let (triple, quintuples) = get_repeats(&hashed);
 
         loop {
@@ -38,6 +48,9 @@ fn main() {
 
         for quintuple in quintuples {
             for trip in seen_triples.iter().filter(|trip| trip.1 == quintuple) {
+                if args.debug {
+                    println!("Found key: {}", trip.0);
+                }
                 key_indexes.insert(trip.0);
                 if key_indexes.len() >= 64
                     && *key_indexes.iter().sorted().nth(63).unwrap() < i - 1000
