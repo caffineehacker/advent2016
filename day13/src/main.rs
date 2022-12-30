@@ -1,6 +1,9 @@
 use clap::Parser;
 use itertools::Itertools;
-use std::{cmp::Reverse, collections::BinaryHeap};
+use std::{
+    cmp::Reverse,
+    collections::{BinaryHeap, VecDeque},
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -49,6 +52,11 @@ impl Ord for State {
 fn main() {
     let args = Args::parse();
 
+    do_part1(&args);
+    do_part2(&args);
+}
+
+fn do_part1(args: &Args) {
     let mut states: BinaryHeap<Reverse<State>> = BinaryHeap::new();
     states.push(Reverse(State {
         position: (1, 1),
@@ -69,6 +77,7 @@ fn main() {
 
         if state.position == state.target {
             println!("Part 1: {}", state.steps);
+            break;
         }
 
         let mut state = state.clone();
@@ -98,6 +107,61 @@ fn main() {
             states.push(Reverse(state));
         }
     }
+}
+
+fn do_part2(args: &Args) {
+    let mut states: VecDeque<State> = VecDeque::new();
+    states.push_back(State {
+        position: (1, 1),
+        steps: 0,
+        // Target is irrelevant in this mode
+        target: (1, 1),
+    });
+
+    let mut positions_seen = Vec::new();
+
+    while !states.is_empty() {
+        let state = states.pop_front().unwrap();
+
+        if positions_seen.contains(&state.position) {
+            continue;
+        }
+
+        positions_seen.push(state.position);
+
+        if state.steps == 50 {
+            continue;
+        }
+
+        let mut state = state.clone();
+        state.steps += 1;
+
+        if state.position.0 > 0 && !is_wall((state.position.0 - 1, state.position.1), args.input) {
+            let mut state = state.clone();
+            state.position.0 -= 1;
+            states.push_back(state);
+        }
+
+        if state.position.1 > 0 && !is_wall((state.position.0, state.position.1 - 1), args.input) {
+            let mut state = state.clone();
+            state.position.1 -= 1;
+            states.push_back(state);
+        }
+
+        if !is_wall((state.position.0, state.position.1 + 1), args.input) {
+            let mut state = state.clone();
+            state.position.1 += 1;
+            states.push_back(state);
+        }
+
+        if !is_wall((state.position.0 + 1, state.position.1), args.input) {
+            let mut state = state.clone();
+            state.position.0 += 1;
+            states.push_back(state);
+        }
+    }
+
+    println!("Part 2: {}", positions_seen.len());
 }
 
 fn is_wall(position: (u32, u32), input: u32) -> bool {
