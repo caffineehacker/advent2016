@@ -79,6 +79,8 @@ struct Args {
     data_file: String,
     #[arg(long)]
     debug: bool,
+    #[arg(long)]
+    part2: bool,
 }
 
 fn main() {
@@ -98,6 +100,11 @@ fn main() {
 
     let mut pc: i32 = 0;
     let mut registers = vec![0; 4];
+
+    if args.part2 {
+        registers[2] = 1;
+    }
+
     while (pc as usize) < instructions.len() {
         match &instructions[pc as usize] {
             Instruction::Copy(src, dst) => {
