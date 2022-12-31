@@ -1,4 +1,4 @@
-use std::collections::BinaryHeap;
+use std::{cmp::Reverse, collections::BinaryHeap};
 
 use clap::Parser;
 use itertools::Itertools;
@@ -45,6 +45,11 @@ impl Ord for State {
 fn main() {
     let args = Args::parse();
 
+    do_part1(&args);
+    do_part2(&args);
+}
+
+fn do_part1(args: &Args) {
     let mut states = BinaryHeap::new();
     states.push(State {
         position: (0, 0),
@@ -86,4 +91,51 @@ fn main() {
             });
         }
     }
+}
+
+fn do_part2(args: &Args) {
+    let mut states = BinaryHeap::new();
+    states.push(State {
+        position: (0, 0),
+        code: args.input.clone(),
+    });
+
+    let mut longest_path = 0;
+    while !states.is_empty() {
+        let state = states.pop().unwrap();
+
+        if state.position == (3, 3) {
+            longest_path = longest_path.max(state.code.trim_start_matches(&args.input).len());
+            continue;
+        }
+
+        let hash = md5::compute(state.code.clone()).0;
+        if state.position.1 > 0 && hash[0] >= 0xb0 {
+            states.push(State {
+                position: (state.position.0, state.position.1 - 1),
+                code: state.code.clone() + "U",
+            });
+        }
+        if state.position.1 < 3 && hash[0] & 0x0F >= 0x0b {
+            states.push(State {
+                position: (state.position.0, state.position.1 + 1),
+                code: state.code.clone() + "D",
+            });
+        }
+
+        if state.position.0 > 0 && hash[1] >= 0xb0 {
+            states.push(State {
+                position: (state.position.0 - 1, state.position.1),
+                code: state.code.clone() + "L",
+            });
+        }
+        if state.position.0 < 3 && hash[1] & 0x0F >= 0x0b {
+            states.push(State {
+                position: (state.position.0 + 1, state.position.1),
+                code: state.code.clone() + "R",
+            });
+        }
+    }
+
+    println!("Part 2: {}", longest_path);
 }
