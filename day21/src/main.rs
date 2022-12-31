@@ -13,6 +13,8 @@ struct Args {
     #[arg(long)]
     password: String,
     #[arg(long)]
+    reverse: bool,
+    #[arg(long)]
     debug: bool,
 }
 
@@ -21,10 +23,14 @@ fn main() {
 
     let file = File::open(&args.data_file).expect("Failed to open file");
     let reader = BufReader::new(file);
-    let lines: Vec<String> = reader
+    let mut lines: Vec<String> = reader
         .lines()
         .map(|line| line.expect("Failed to read line"))
         .collect();
+
+    if args.reverse {
+        lines = lines.into_iter().rev().collect_vec();
+    }
 
     let mut password = args.password.chars().collect_vec();
     for instruction in lines.iter() {
@@ -53,16 +59,54 @@ fn main() {
             },
             "rotate" => {
                 let mut amount;
+                let mut is_right = components[1] == "right" || components[1] == "based";
+                if args.reverse {
+                    is_right = !is_right;
+                }
                 if components[1] == "based" {
                     let test_char = components[6].chars().last().unwrap();
-                    amount = 1 + password.iter().position(|c| *c == test_char).unwrap();
-                    if amount >= 5 {
-                        amount += 1;
+                    let position = password.iter().position(|c| *c == test_char).unwrap();
+
+                    if args.reverse {
+                        // When we are reversing, this gets to be some special magic
+                        // If the character is last, then it moved 1 + original index and possibly one more
+                        // So first we want to rotate left 1 to undo the original + 1
+                        // Then we figure out if the current position would work or if we need to keep moving
+                        let mut original_position = if position == 0 {
+                            password.len() - 1
+                        } else {
+                            position - 1
+                        };
+                        while (original_position
+                            + original_position
+                            + 1
+                            + if original_position >= 4 { 1 } else { 0 })
+                            % password.len()
+                            != position
+                        {
+                            if original_position == 0 {
+                                original_position = password.len();
+                            }
+                            original_position -= 1;
+                        }
+                        if original_position < position {
+                            is_right = false;
+                            amount = position - original_position;
+                        } else {
+                            is_right = true;
+                            amount = original_position - position;
+                        }
+                    } else {
+                        amount = 1 + position;
+                        if amount >= 5 {
+                            amount += 1;
+                        }
                     }
                 } else {
                     amount = components[2].parse::<usize>().unwrap();
                 }
-                if components[1] == "right" || components[1] == "based" {
+
+                if is_right {
                     // It's easiest to always rotate left
                     amount %= password.len();
                     amount = password.len() - amount;
@@ -94,8 +138,15 @@ fn main() {
                 password = new_password;
             }
             "move" => {
-                let removed = password.remove(components[2].parse().unwrap());
-                password.insert(components[5].parse().unwrap(), removed);
+                let mut src_index = components[2].parse().unwrap();
+                let mut dst_index = components[5].parse().unwrap();
+                if args.reverse {
+                    let temp = src_index;
+                    src_index = dst_index;
+                    dst_index = temp;
+                }
+                let removed = password.remove(src_index);
+                password.insert(dst_index, removed);
             }
             _ => panic!("Unexpected instruction"),
         }
@@ -106,5 +157,8 @@ fn main() {
         }
     }
 
-    println!("Part 1: {}", password.iter().collect::<String>());
+    println!(
+        "Scrambled password: {}",
+        password.iter().collect::<String>()
+    );
 }
