@@ -7,6 +7,8 @@ struct Args {
     #[arg(long)]
     input: String,
     #[arg(long)]
+    rows: usize,
+    #[arg(long)]
     debug: bool,
 }
 
@@ -17,7 +19,7 @@ fn main() {
     let mut traps = args.input.chars().map(|c| c == '^').collect_vec();
 
     let mut safe_count = traps.iter().filter(|t| !**t).count();
-    for _ in 0..39 {
+    for _ in 0..(args.rows - 1) {
         traps = next_row(&traps);
         safe_count += traps.iter().filter(|t| !**t).count();
 
