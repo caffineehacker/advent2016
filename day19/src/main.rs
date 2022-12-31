@@ -40,4 +40,33 @@ fn main() {
     }
 
     println!("Part 1: {}", next_turn);
+
+    let progress = indicatif::ProgressBar::new(args.input.into());
+    progress.set_style(
+        indicatif::ProgressStyle::with_template(
+            "[{elapsed_precise}] {wide_bar:.cyan/blue} {pos:>7}/{len:7} {msg} ({eta_precise})",
+        )
+        .unwrap(),
+    );
+
+    // Part 2
+    let mut elves = (1..=args.input).collect_vec();
+    let mut turn_index = 0;
+    while elves.len() > 1 {
+        let index = (turn_index + (elves.len() / 2)) % elves.len();
+        elves.remove(index);
+
+        if index > turn_index {
+            turn_index = turn_index + 1;
+        }
+
+        turn_index %= elves.len();
+
+        progress.set_message(format!("Elf: {}", elves[turn_index]));
+        progress.inc(1);
+    }
+
+    progress.finish_and_clear();
+
+    println!("Part 2: {}", elves[0]);
 }
