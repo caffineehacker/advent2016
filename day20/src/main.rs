@@ -60,4 +60,12 @@ fn main() {
     };
 
     println!("Part 1: {}", first_allowed);
+
+    let mut total_allowed = ranges[0].0;
+    for i in 1..ranges.len() {
+        total_allowed += ranges[i].0 - 1 - ranges[i - 1].1;
+    }
+    total_allowed += u32::MAX - ranges.last().unwrap().1;
+
+    println!("Part 2: {}", total_allowed);
 }
