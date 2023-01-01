@@ -45,6 +45,8 @@ impl From<&str> for Operand {
 
 #[derive(Clone, Copy, Debug)]
 enum Instruction {
+    Nop,
+    Add(Operand, Operand),
     Copy(Operand, Operand),
     Increment(Register),
     Decrement(Register),
@@ -57,6 +59,8 @@ impl From<&str> for Instruction {
         let components = value.split_whitespace().collect_vec();
 
         match components[0] {
+            "nop" => Instruction::Nop,
+            "add" => Instruction::Add(components[1].into(), components[2].into()),
             "cpy" => Instruction::Copy(components[1].into(), components[2].into()),
             "inc" => Instruction::Increment(components[1].into()),
             "dec" => Instruction::Decrement(components[1].into()),
@@ -105,6 +109,16 @@ fn main() {
             println!("{}: {:?}", pc, instructions[pc as usize]);
         }
         match &instructions[pc as usize] {
+            Instruction::Nop => (),
+            Instruction::Add(src, dst) => {
+                // Adding to an immediate is invalid
+                if let Operand::Register(reg) = dst {
+                    registers[*reg as usize] += match src {
+                        Operand::Value(val) => *val,
+                        Operand::Register(src) => registers[*src as usize],
+                    };
+                }
+            }
             Instruction::Copy(src, dst) => {
                 // Copying to an immediate is invalid
                 if let Operand::Register(reg) = dst {
@@ -136,6 +150,8 @@ fn main() {
                 // Do nothing if we're not pointing to an instruction in the program
                 if target_index < instructions.len() {
                     instructions[target_index] = match instructions[target_index] {
+                        Instruction::Nop => panic!("Can't toggle nop"),
+                        Instruction::Add(_, _) => panic!("Can't toggle add"),
                         Instruction::Copy(a, b) => Instruction::JumpNotZero(a, b),
                         Instruction::Increment(reg) => Instruction::Decrement(reg),
                         Instruction::Decrement(reg) => Instruction::Increment(reg),
@@ -144,6 +160,10 @@ fn main() {
                     };
                 }
             }
+        }
+
+        if args.debug {
+            registers.iter().for_each(|reg| print!("{} ", reg));
         }
 
         pc += 1;
