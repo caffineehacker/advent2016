@@ -82,4 +82,34 @@ fn main() {
     }
 
     println!("Part 1: {}", valid_pairs);
+
+    // Part 2, extract data from top-right
+    let goal_position = nodes
+        .iter()
+        .map(|node| node.position)
+        .filter(|position| position.1 == 0)
+        .max_by_key(|position| position.1)
+        .unwrap();
+
+    // This is effectively a sliding block puzzle
+    // This is honestly easier to answer just by printing the puzzle out
+    for y in 0..nodes
+        .iter()
+        .max_by_key(|node| node.position.1)
+        .unwrap()
+        .position
+        .1
+    {
+        for x in 0..goal_position.0 {
+            let node = nodes.iter().find(|node| node.position == (x, y)).unwrap();
+            if node.size > 100 {
+                print!("X");
+            } else if node.used == 0 {
+                print!("_");
+            } else {
+                print!(".");
+            }
+        }
+        println!();
+    }
 }
