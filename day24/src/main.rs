@@ -84,6 +84,31 @@ fn main() {
         .unwrap();
 
     println!("Part 1: {}", shortest_path_length);
+
+    // Part 2
+    let shortest_path_length = (1..(required_points.len()))
+        .permutations(required_points.len() - 1)
+        .map(|permutation| {
+            let mut last_node = 0;
+            let mut cost = 0;
+            for i in 0..permutation.len() {
+                cost += edges.get(&(last_node, permutation[i])).unwrap();
+                last_node = permutation[i];
+            }
+            cost += edges.get(&(last_node, 0)).unwrap();
+
+            if args.debug {
+                print!("0");
+                permutation.iter().for_each(|n| print!(" -> {}", n));
+                println!();
+            }
+
+            cost
+        })
+        .min()
+        .unwrap();
+
+    println!("Part 2: {}", shortest_path_length);
 }
 
 fn distance_between(
